@@ -1,0 +1,25 @@
+{
+  "exchanges": {
+    "binance": {
+      "name": "binance",
+      "api_key": null,
+      "api_secret": null,
+      "sandbox": true,
+      "rate_limit": 1200
+    },
+    "okx": {
+      "name": "okx",
+      "api_key": null,
+      "api_secret": null,
+      "sandbox": true,
+      "rate_limit": 20
+    },
+    "hyperliquid": {
+      "name": "hyperliquid",
+      "api_key": null,
+      "api_secret": null,
+      "sandbox": true,
+      "rate_limit": 100
+    }
+  }
+}

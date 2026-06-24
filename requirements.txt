@@ -1,0 +1,101 @@
+# Core Trading Framework
+freqtrade[freqai]
+ccxt
+
+# Machine Learning & Data Science
+scikit-learn
+pandas
+numpy
+scipy
+torch
+transformers
+datasets
+xgboost
+lightgbm
+
+# Financial Data & Analysis
+yfinance
+ta
+python-binance
+alpaca-trade-api
+
+# NLP & Sentiment Analysis
+tweepy
+vaderSentiment
+textblob
+spacy
+nltk
+
+# Data Storage & Caching
+redis
+psycopg2-binary
+sqlalchemy
+alembic
+
+# Web & API
+fastapi
+uvicorn
+requests
+aiohttp
+websockets
+
+# Visualization & Monitoring
+plotly
+matplotlib
+seaborn
+streamlit
+
+# Mathematical & Scientific Computing
+sympy
+statsmodels
+pymc
+arviz
+
+# Time Series Analysis
+arch
+prophet
+sktime
+
+# Anomaly Detection
+pyod
+isolation-forest
+
+# Optimization
+cvxpy
+hyperopt
+optuna
+
+# Security & Encryption
+cryptography
+passlib
+bcrypt
+
+# RSS Feed Processing
+feedparser
+newspaper3k
+
+# Utilities
+python-dotenv
+pydantic
+click
+rich
+loguru
+python-telegram-bot
+schedule
+
+# Development & Testing
+pytest
+pytest-asyncio
+pytest-cov
+black
+flake8
+mypy
+pre-commit
+
+# Containerization
+docker
+kubernetes
+
+# Performance
+numba
+cython
