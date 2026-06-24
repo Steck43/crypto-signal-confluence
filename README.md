@@ -34,7 +34,7 @@ Validation hardening worked. The purged and embargoed splitter produced the expe
 
 The sentiment ablation was inconclusive on the current measured path, and the reason is itself the finding. With sentiment included and with sentiment removed, the system produced identical results, because on the synthetic series with simulated headlines the ensemble emitted hold on all 4,165 purged test bars. A component cannot be measured in a system that never trades. So the honest verdict is not that sentiment fails. It is that the test could not isolate sentiment's contribution under these inputs, and a real verdict requires real market data and real news, which is scoped as the next step. The ablation harness that would produce that verdict is built and lives in `run_sentiment_ablation.py`.
 
-The transaction-cost analysis is the one component with a clean result. Across the venues studied, round-trip cost varies by more than an order of magnitude, and for a thin-edge strategy that gap is decisive. The cheapest venues clear a far lower break-even edge per trade than the standard-fee venues, which means venue selection is a larger lever on viability than any model choice. The cost figures were pulled from venue documentation and are time-stamped, since fees change.
+The transaction-cost analysis is the one component with a clean result. Round-trip cost varies by an order of magnitude across venues, and for a thin-edge strategy venue selection is a primary lever on viability, larger than any single model choice. Full dated tables, the uniform execution model, methodology, limitations, and sources are in `TRANSACTION_COST_ANALYSIS.md`.
 
 ## Limitations
 
