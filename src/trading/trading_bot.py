@@ -1,17 +1,19 @@
 """
 Main trading bot that orchestrates the trading system
+
+EXPLORATORY: live-trading scaffold. Not validated. Not wired to live trading.
 """
 
 import asyncio
 import time
 from datetime import datetime
-from trading.signal_generator import SignalGenerator
+from trading.signal_generator import SimplifiedInstitutionalSignalGenerator
 from trading.risk_manager import RiskManager
 from trading.order_executor import OrderExecutor
 
 class TradingBot:
     def __init__(self, initial_capital=500):
-        self.signal_generator = SignalGenerator()
+        self.signal_generator = SimplifiedInstitutionalSignalGenerator()
         self.risk_manager = RiskManager(initial_capital)
         self.order_executor = OrderExecutor()
         self.running = False
@@ -84,12 +86,11 @@ class TradingBot:
             try:
                 # 1. Get market data (placeholder)
                 market_data = await self._get_market_data(symbol)
-                news_data = await self._get_news_data(symbol)
-                
-                # 2. Generate institutional trading signal
-                signal = await self.signal_generator.generate_institutional_signals(market_data, news_data, symbol)
+
+                signal = await self.signal_generator.generate_trading_signals(market_data, symbol=symbol)
                 print(f"{symbol}: {signal['signal']} (strength: {signal['strength']:.2f}, confidence: {signal['confidence']:.2f})")
-                print(f"  Market Regime: {signal['metadata']['market_regime']}")
+                regime = signal.get('market_regime', signal.get('risk_metrics', {}).get('market_regime', 'unknown'))
+                print(f"  Market Regime: {regime}")
                 print(f"  Risk Score: {signal['risk_metrics'].get('risk_score', 0):.3f}")
                 
                 # 3. Check if we should trade

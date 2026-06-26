@@ -1,6 +1,8 @@
 """
 GRU Time Series Forecaster for Institutional Trading System
 
+EXPLORATORY: GRU overlay research. Not on the validated ablation path. Not validated.
+
 Provides time series forecasting capabilities to complement the volume anomaly detection.
 Focuses on price prediction and trend forecasting using GRU neural networks.
 """

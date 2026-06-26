@@ -620,6 +620,8 @@ class InstitutionalVolumeAnomalyDetector:
         self.is_fitted = False
         self.feature_columns = []
         self.scaler = StandardScaler()
+        self._mahalanobis_mean: Optional[np.ndarray] = None
+        self._mahalanobis_cov_inv: Optional[np.ndarray] = None
         
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -755,7 +757,7 @@ class InstitutionalVolumeAnomalyDetector:
             self.feature_columns = [col for col in df.columns 
                                   if col not in ['timestamp', 'symbol', 'volume', 'price', 'high', 'low']]
             
-            self.logger.info(f"SUCCESS: Engineered {len(self.feature_columns)} institutional features")
+            self.logger.debug(f"Engineered {len(self.feature_columns)} institutional features")
             
             return df
             
@@ -774,6 +776,11 @@ class InstitutionalVolumeAnomalyDetector:
             # Prepare features for training
             X = engineered_data[self.feature_columns].values
             X_scaled = self.scaler.fit_transform(X)
+
+            if "mahalanobis" in self.algorithms:
+                self._mahalanobis_mean = np.mean(X_scaled, axis=0)
+                cov = np.cov(X_scaled, rowvar=False)
+                self._mahalanobis_cov_inv = np.linalg.pinv(cov)
             
             # Initialize and fit all algorithms
             for algorithm in self.algorithms:
@@ -794,6 +801,57 @@ class InstitutionalVolumeAnomalyDetector:
             self.logger.error(f"ERROR: Error fitting institutional models: {e}")
             raise
     
+    def _score_institutional_row(
+        self,
+        row: pd.Series,
+        row_scaled: np.ndarray,
+        raw_features: np.ndarray,
+    ) -> VolumeAnomalyResult:
+        algorithm_scores = {}
+        for algorithm in self.algorithms:
+            if algorithm == 'isolation_forest':
+                score = self.models[algorithm].score_samples([row_scaled])[0]
+            elif algorithm == 'local_outlier_factor':
+                score = self.models[algorithm].score_samples([row_scaled])[0]
+            elif algorithm == 'mahalanobis':
+                score = -self._calculate_mahalanobis_distance([row_scaled])[0]
+            elif algorithm == 'statistical_process_control':
+                score = self._calculate_spc_score(row_scaled)
+            elif algorithm == 'one_class_svm':
+                score = self.models[algorithm].score_samples([row_scaled])[0]
+            else:
+                score = 0.0
+            algorithm_scores[algorithm] = score
+
+        ensemble_score = self._ensemble_decision(algorithm_scores)
+        is_anomaly = ensemble_score < self.contamination
+        confidence = self._calculate_ensemble_confidence(algorithm_scores)
+
+        return VolumeAnomalyResult(
+            timestamp=row['timestamp'],
+            symbol='SOL',
+            volume=row['volume'],
+            price=row['price'],
+            anomaly_score=ensemble_score,
+            is_anomaly=is_anomaly,
+            confidence=confidence,
+            features=dict(zip(self.feature_columns, raw_features)),
+            detection_method='institutional_ensemble',
+        )
+
+    def predict_latest(self, data: pd.DataFrame) -> Optional[VolumeAnomalyResult]:
+        """Score only the latest valid row (walk-forward evaluation path)."""
+        if not self.is_fitted:
+            raise ValueError("Models must be fitted before prediction")
+        engineered_data = self.engineer_institutional_features(data)
+        if len(engineered_data) == 0:
+            raise ValueError("No valid rows after feature engineering")
+        pos = len(engineered_data) - 1
+        row = engineered_data.iloc[pos]
+        X = engineered_data[self.feature_columns].values
+        X_scaled = self.scaler.transform(X)
+        return self._score_institutional_row(row, X_scaled[pos], X[pos])
+
     def predict(self, data: pd.DataFrame) -> List[VolumeAnomalyResult]:
         """
         Predict anomalies using ensemble of institutional algorithms.
@@ -808,58 +866,18 @@ class InstitutionalVolumeAnomalyDetector:
             X_scaled = self.scaler.transform(X)
             
             results = []
-            
-            for i, row in engineered_data.iterrows():
-                # Get predictions from all algorithms
-                algorithm_scores = {}
-                for algorithm in self.algorithms:
-                    if algorithm == 'isolation_forest':
-                        score = self.models[algorithm].score_samples([X_scaled[i]])[0]
-                    elif algorithm == 'local_outlier_factor':
-                        score = self.models[algorithm].score_samples([X_scaled[i]])[0]
-                    elif algorithm == 'mahalanobis':
-                        score = -self._calculate_mahalanobis_distance([X_scaled[i]])[0]
-                    elif algorithm == 'statistical_process_control':
-                        score = self._calculate_spc_score(X_scaled[i])
-                    elif algorithm == 'one_class_svm':
-                        score = self.models[algorithm].score_samples([X_scaled[i]])[0]
-                    else:
-                        score = 0.0
-                    
-                    algorithm_scores[algorithm] = score
-                
-                # Ensemble decision with adaptive weights
-                ensemble_score = self._ensemble_decision(algorithm_scores)
-                
-                # Determine if anomaly
-                is_anomaly = ensemble_score < self.contamination
-                
-                # Calculate confidence
-                confidence = self._calculate_ensemble_confidence(algorithm_scores)
-                
-                # Detect market regime
-                market_regime = self._detect_market_regime(row)
-                
-                # Create result
-                result = VolumeAnomalyResult(
-                    timestamp=row['timestamp'],
-                    symbol='SOL',  # Default
-                    volume=row['volume'],
-                    price=row['price'],
-                    anomaly_score=ensemble_score,
-                    is_anomaly=is_anomaly,
-                    confidence=confidence,
-                    features=dict(zip(self.feature_columns, X[i])),
-                    detection_method='institutional_ensemble'
+
+            for pos in range(len(engineered_data)):
+                row = engineered_data.iloc[pos]
+                results.append(
+                    self._score_institutional_row(row, X_scaled[pos], X[pos])
                 )
-                
-                results.append(result)
-            
+
             return results
-            
+
         except Exception as e:
             self.logger.error(f"ERROR: Error predicting anomalies: {e}")
-            return []
+            raise
     
     def _create_algorithm(self, algorithm_name: str):
         """Create algorithm instance."""
@@ -887,6 +905,20 @@ class InstitutionalVolumeAnomalyDetector:
         """Calculate Statistical Process Control score."""
         # Simplified SPC implementation
         return np.mean(features) + 2 * np.std(features)
+
+    def _calculate_mahalanobis_distance(self, X: np.ndarray) -> np.ndarray:
+        """Mahalanobis distance relative to the fitted training distribution."""
+        if self._mahalanobis_mean is None or self._mahalanobis_cov_inv is None:
+            raise ValueError("Mahalanobis statistics not available; fit the detector first")
+        distances = []
+        for sample in X:
+            diff = sample - self._mahalanobis_mean
+            try:
+                dist = float(np.sqrt(diff @ self._mahalanobis_cov_inv @ diff))
+                distances.append(dist)
+            except np.linalg.LinAlgError:
+                distances.append(0.0)
+        return np.array(distances)
     
     def _ensemble_decision(self, algorithm_scores: Dict[str, float]) -> float:
         """Make ensemble decision with adaptive weights."""

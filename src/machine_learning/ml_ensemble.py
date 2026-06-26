@@ -1,6 +1,9 @@
 """
 ML Ensemble Manager for Institutional Trading System
 
+EXPLORATORY: fixed-weight XGBoost+GRU fusion scaffold. Not on the validated ablation path.
+The validated harness uses xgboost_predictor.py directly.
+
 Coordinates XGBoost and GRU models with existing institutional components.
 Provides unified interface for all ML predictions and ensemble decisions.
 """

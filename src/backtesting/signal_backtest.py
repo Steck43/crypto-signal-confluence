@@ -121,11 +121,18 @@ class PurgedSignalBacktester:
         y_pred: List[int] = []
         eval_indices: List[int] = []
         signal_labels: List[str] = []
+        bars_evaluated = 0
 
         for _train_idx, test_idx in splitter.split(market_data.values):
             for idx in test_idx:
                 if idx < self.min_history:
                     continue
+                bars_evaluated += 1
+                if bars_evaluated % 500 == 0:
+                    print(
+                        f"Ensemble walk-forward: {bars_evaluated} bars evaluated "
+                        f"(sentiment={'on' if include_sentiment else 'off'})..."
+                    )
                 window = market_data.iloc[: idx + 1].copy()
                 result = await generator.generate_trading_signals(window, symbol=symbol)
                 predicted = _signal_to_class(result["signal"])

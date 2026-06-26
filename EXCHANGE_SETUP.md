@@ -134,7 +134,7 @@ config.set_exchange_credentials(
 Run the exchange checker:
 
 ```bash
-python check_exchanges.py
+Use `test_secure_config.py` to verify encrypted credentials load correctly.
 ```
 
 This will show:
@@ -205,7 +205,7 @@ This will show:
 
 1. **Choose Primary Exchange**: Select based on your trading needs
 2. **Set Up API Keys**: Follow exchange-specific instructions
-3. **Test Connection**: Use `check_exchanges.py`
+3. **Test Connection**: Use `test_secure_config.py`
 4. **Configure Trading Parameters**: Set risk limits and strategies
 5. **Start Paper Trading**: Test with simulated orders
 6. **Monitor Performance**: Use built-in monitoring tools

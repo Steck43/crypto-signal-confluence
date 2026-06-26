@@ -1,11 +1,8 @@
 """
 Enhanced ML Ensemble Manager with GPU Support and Continuous Learning
 
-Key improvements:
-- GPU acceleration for RTX 4090
-- Online learning capabilities
-- Adaptive ensemble weighting
-- Model performance tracking and auto-retraining
+EXPLORATORY: adaptive ensemble research scaffold. Not on the validated ablation path.
+Not validated. Several core training paths are intentionally not implemented.
 """
 
 import asyncio
@@ -775,44 +772,27 @@ class EnhancedMLEnsembleManager:
     
     def _prepare_all_features(self, volume_features, sentiment_data, technical_data, market_data):
         """Prepare all features for training"""
-        # Implementation similar to original but with additional feature engineering
-        # Add more sophisticated features like:
-        # - Rolling statistics
-        # - Market microstructure features
-        # - Cross-asset correlations
-        # - Regime indicators
-        pass
-    
+        raise NotImplementedError("exploratory, not implemented")
+
     def _create_advanced_targets(self, historical_data):
         """Create more sophisticated targets for training"""
-        # Instead of simple price direction, consider:
-        # - Risk-adjusted returns
-        # - Maximum favorable excursion
-        # - Multi-horizon targets
-        # - Regime-specific targets
-        pass
-    
+        raise NotImplementedError("exploratory, not implemented")
+
     def _create_market_regime_tasks(self, features, targets):
         """Create tasks for different market regimes for MAML"""
-        # Identify different market regimes (trending, ranging, volatile, etc.)
-        # Create separate tasks for each regime
-        # This allows MAML to learn how to quickly adapt to regime changes
-        pass
-    
+        raise NotImplementedError("exploratory, not implemented")
+
     def _prepare_current_features(self, current_data, current_volume_features):
         """Prepare features for current prediction"""
-        # Similar to training feature preparation but for single instance
-        pass
-    
+        raise NotImplementedError("exploratory, not implemented")
+
     def _create_recent_task(self, current_data, current_volume_features):
         """Create task from recent data for MAML adaptation"""
-        # Use last N periods as support set for rapid adaptation
-        pass
-    
+        raise NotImplementedError("exploratory, not implemented")
+
     def _maml_predict(self, adapted_model, features):
         """Make prediction using adapted MAML model"""
-        # Run prediction through adapted model
-        pass
+        raise NotImplementedError("exploratory, not implemented")
     
     def _get_neutral_prediction(self, model_name, error_msg):
         """Get neutral prediction when model fails"""
