@@ -68,7 +68,7 @@ class XGBoostSignalPredictor:
             objective='multi:softprob',  # Multi-class probabilities
             eval_metric='mlogloss',      # Log loss for probability calibration
             random_state=random_state,
-            n_jobs=-1,                   # Use all available cores
+            n_jobs=1,                   # Single-threaded for deterministic CV
             tree_method='hist',          # Fast histogram-based method
             enable_categorical=False,    # All features are numerical
             verbosity=0                  # Reduce output noise

@@ -5,6 +5,18 @@ Validation hardening check and sentiment ablation on purged walk-forward folds.
 
 from __future__ import annotations
 
+import os
+
+# Pin thread pools before BLAS / XGBoost import for reproducible CV on Windows/Linux.
+for _thread_var in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+):
+    os.environ.setdefault(_thread_var, "1")
+
 import asyncio
 import json
 import logging
@@ -192,6 +204,7 @@ def verdict(ablation: dict) -> str:
 
 
 def main() -> None:
+    np.random.seed(42)
     market_data = generate_market_data(n_samples=5000, seed=42)
 
     validation = run_validation_comparison(market_data)
