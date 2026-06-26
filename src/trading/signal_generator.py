@@ -137,20 +137,24 @@ class SimplifiedInstitutionalSignalGenerator:
         PhD-level volume anomaly analysis using institutional methods
         """
         try:
-            # Prepare data for anomaly detection
             prepared_data = self._prepare_market_data(market_data)
-            # Convert to DataFrame format expected by VolumeAnomalyDetector
-            anomaly_df = pd.DataFrame({
-                'timestamp': [datetime.now()],
-                'volume': [prepared_data['volume'].iloc[-1]],
-                'price': [prepared_data['price'].iloc[-1]],
-                'high': [prepared_data['high'].iloc[-1] if 'high' in prepared_data.columns else prepared_data['close'].iloc[-1] * 1.01],
-                'low': [prepared_data['low'].iloc[-1] if 'low' in prepared_data.columns else prepared_data['close'].iloc[-1] * 0.99]
-            })
-            
-            # Use institutional predict method with ensemble of 5 algorithms
-            anomaly_results = self.volume_detector.predict(anomaly_df)
-            anomaly_result = anomaly_results[0] if anomaly_results else None
+            if 'timestamp' not in prepared_data.columns:
+                prepared_data['timestamp'] = pd.date_range(
+                    start='2024-01-01', periods=len(prepared_data), freq='5min'
+                )
+            if 'high' not in prepared_data.columns:
+                prepared_data['high'] = prepared_data['close'] * 1.01
+            if 'low' not in prepared_data.columns:
+                prepared_data['low'] = prepared_data['close'] * 0.99
+
+            window_size = max(120, self.volume_detector.lookback_period)
+            window = prepared_data.tail(window_size).copy()
+            if len(window) < 20:
+                return self._create_hold_signal(
+                    'volume_anomaly', 'Insufficient history for volume features'
+                )
+
+            anomaly_result = self.volume_detector.predict_latest(window)
             
             if anomaly_result:
                 anomaly_score = anomaly_result.anomaly_score
