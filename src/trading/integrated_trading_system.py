@@ -1,8 +1,8 @@
 """
 Integrated Trading System with All Enhancements
 
-This module brings together all improvements to fix the 100% HOLD signal issue
-and integrate the enhanced components.
+EXPLORATORY: incomplete integration scaffold. Not on the validated ablation path.
+Not validated. Demonstrates design directions only.
 """
 
 import asyncio
@@ -17,8 +17,12 @@ from collections import defaultdict
 # Import all enhanced components
 from ..machine_learning.enhanced_ml_ensemble import EnhancedMLEnsembleManager
 from ..sentiment_analysis.enhanced_sentiment_analyzer import EnhancedSentimentAnalyzer, SentimentAnalysisIntegration
-from ..utils.robust_volume_detector import RobustVolumeAnomalyDetector, safe_volume_analysis
+from analysis.volume_anomaly_detection import InstitutionalVolumeAnomalyDetector
 from ..utils.telegram_notifier import TelegramNotifier
+
+
+async def safe_volume_analysis(market_data, volume_detector):
+    raise NotImplementedError("exploratory integrated trading system; not implemented")
 
 logger = logging.getLogger(__name__)
 
@@ -451,9 +455,11 @@ class IntegratedTradingSystem:
         )
         
         # Robust volume detector
-        self.volume_detector = RobustVolumeAnomalyDetector(
-            min_samples=100,
-            warmup_mode=True
+        self.volume_detector = InstitutionalVolumeAnomalyDetector(
+            algorithms=['isolation_forest'],
+            contamination=0.05,
+            lookback_period=200,
+            random_state=42,
         )
         
         # Multi-exchange manager (configure with your credentials)
@@ -553,8 +559,11 @@ class IntegratedTradingSystem:
             self.logger.warning("Insufficient historical data for training")
             return
         
-        # Extract features
-        volume_features = self.volume_detector.extract_features(historical_data)
+        # Extract features (exploratory scaffold)
+        prepared = historical_data.copy()
+        if "price" not in prepared.columns and "close" in prepared.columns:
+            prepared["price"] = prepared["close"]
+        volume_features = self.volume_detector.engineer_institutional_features(prepared)
         
         # Placeholder sentiment/technical data
         sentiment_data = {'rss_score': 0.0, 'av_score': 0.0, 'confidence': 0.5, 'article_count': 0}

@@ -1,6 +1,8 @@
 """
 Ensemble Trading Strategy for Freqtrade
 
+EXPLORATORY: Freqtrade integration scaffold. Not on the validated ablation path. Not validated.
+
 Multi-signal trading strategy combining:
 - Volume anomaly detection
 - Sentiment analysis signals
@@ -44,7 +46,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 try:
-    from technical_analysis.volume_anomaly_detection import VolumeAnomalyDetector
+    from analysis.volume_anomaly_detection import VolumeAnomalyDetector
     from sentiment_analysis.twitter_collector import TwitterSentimentCollector
 except ImportError:
     # Fallback for testing
