@@ -2,7 +2,7 @@
 Trading module for AI Crypto Trading System
 """
 
-from .signal_generator import SignalGenerator, InstitutionalSignalGenerator, SimplifiedInstitutionalSignalGenerator
+from .signal_generator import SimplifiedInstitutionalSignalGenerator
 
 try:
     from .risk_manager import RiskManager
@@ -14,8 +14,6 @@ except ImportError:
     TradingBot = None
 
 __all__ = [
-    'SignalGenerator',
-    'InstitutionalSignalGenerator',
     'SimplifiedInstitutionalSignalGenerator',
     'RiskManager',
     'OrderExecutor',

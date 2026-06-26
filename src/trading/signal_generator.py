@@ -551,25 +551,3 @@ class SimplifiedInstitutionalSignalGenerator:
             },
             'focus': 'Volume Anomaly Detection - Our Real Edge'
         }
-
-# Backward compatibility - keep the old SignalGenerator class
-class SignalGenerator(SimplifiedInstitutionalSignalGenerator):
-    """Legacy signal generator for backward compatibility"""
-    
-    async def generate_trading_signals(self, market_data, news_data):
-        """Legacy method for backward compatibility"""
-        # Convert dict to DataFrame if needed
-        if isinstance(market_data, dict):
-            market_df = pd.DataFrame({
-                'close': market_data.get('prices', [100.0]),
-                'volume': [market_data.get('volume', 1000000)] * len(market_data.get('prices', [100.0]))
-            })
-        else:
-            market_df = market_data
-            
-        return await self.generate_trading_signals(market_df, "SOL")
-
-# Also keep InstitutionalSignalGenerator for compatibility
-class InstitutionalSignalGenerator(SimplifiedInstitutionalSignalGenerator):
-    """Alias for the simplified institutional signal generator"""
-    pass 
