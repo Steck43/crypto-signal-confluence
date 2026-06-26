@@ -18,6 +18,16 @@ Before a machine trades these signals unattended, one thing has to hold. The edg
 
 The name is the thesis. In market terms, confluence is the condition where independent signals agree before action is taken. This system implements that idea directly, a weighted ensemble that only acts when its components align, and then asks whether that alignment actually predicts anything. This repository is not the bot. It is the instrument that asks whether the automated version would have an edge worth trading.
 
+## What is validated and what is exploratory
+
+This repository is organized by tier of evidence.
+
+Validated: the multi-signal confluence harness, purged cross-validation, the sentiment ablation, the volume detector, and the cost analysis. These run under purged CV and reproduce the numbers reported below.
+
+Exploratory: GRU and meta-learning model research, the adaptive ensemble, the macro regime detector, the paper-trading loop, and the dashboard. These are explorations of the design space. They are not validated, are not on the proven path, and some are incomplete. They are included to show the range of approaches considered.
+
+Not included: live exchange execution beyond paper trading.
+
 ## Design under constraint
 
 The system was built as an independent researcher on a student budget, and the constraints shaped the design in ways worth stating plainly, because each one was a deliberate tradeoff rather than an oversight.
@@ -50,15 +60,19 @@ Validation is the part of this work that matters most, because in financial mach
 
 The backtest uses purged cross-validation with an embargo period, following the approach in López de Prado's *Advances in Financial Machine Learning*, chapter 7. Purging removes training samples whose label windows overlap the test window, and the embargo adds a gap after each test fold before training resumes. Both steps exist to stop information from leaking across the train-test boundary, which ordinary time-series cross-validation allows through overlapping labels and serial correlation. The implementation lives in `src/backtesting/purged_cv.py` as the `PurgedKFold` class.
 
-The effect is measured rather than assumed. On the XGBoost path with a synthetic series and a fixed seed, moving from standard time-series splitting to purged and embargoed splitting changed the cross-validated metrics as follows. Accuracy and recall went from 80.36 percent to 80.29 percent. Precision went from 67.80 percent to 67.37 percent. F1 went from 72.47 percent to 72.45 percent. The deltas are small, roughly seven hundredths of a point on accuracy and recall and just under half a point on precision, and they move in the expected direction. The honest reading is that the standard split was not badly leaking on this particular synthetic data, so purging corrected it only slightly. The purpose of running purged validation is to check for that leakage and report what it finds, which on this dataset is a small, well-behaved correction rather than a dramatic one. These numbers are produced by the committed code and reproduce from the run command below.
+The effect is measured rather than assumed. On the XGBoost path with a synthetic series and a fixed seed, moving from standard time-series splitting to purged and embargoed splitting changed the cross-validated metrics as follows. Accuracy and recall went from 80.32 percent to 80.51 percent. Precision went from 66.57 percent to 69.90 percent. F1 went from 72.29 percent to 72.75 percent. The deltas are small and mixed in direction on this synthetic set. The honest reading is that the standard split was not badly leaking on this particular synthetic data. The purpose of running purged validation is to check for that leakage and report what it finds.
+
+Canonical XGBoost cross-validation results were produced on Windows with seed 42, `OMP_NUM_THREADS=1` (set inside `run_sentiment_ablation.py`), and single-threaded XGBoost (`n_jobs=1`). Cross-platform floating-point summation can shift metrics by roughly one to two percentage points on precision; the repository pins threads and seed so two clean clones on the same platform reproduce the reported table.
+
+These numbers are produced by the committed code and reproduce from the run command below.
 
 ## Findings
 
 Results are reported as they came out, including the inconclusive one.
 
-The validation method behaves as designed. Purging and embargoing moved the metrics slightly in the expected direction, confirming the implementation works and indicating the standard split was not heavily leaking on this synthetic set.
+The validation method behaves as designed. Purging and embargoing moved the XGBoost metrics slightly on this synthetic set, confirming the implementation runs and that the standard split was not heavily leaking.
 
-The sentiment ablation was inconclusive on the current measured path, and the reason is itself the finding. With sentiment included and with sentiment removed, the system produced identical results, because on the synthetic series with simulated headlines the ensemble emitted hold on all 4,165 purged test bars. A component cannot be measured in a system that never trades. So the honest verdict is not that sentiment fails. It is that the test could not isolate sentiment's contribution under these inputs, and a real verdict requires real market data and real news, which is scoped as the next step. The ablation harness that would produce that verdict is built and lives in `run_sentiment_ablation.py`.
+The sentiment ablation was inconclusive on the current measured path, and the reason is itself the finding. With sentiment included and with sentiment removed, the system produced identical results, because on the synthetic series with simulated headlines the ensemble emitted hold on all 4,165 purged test bars. After correcting the volume scoring path (rolling window evaluation and Mahalanobis on the institutional detector), the volume leg runs the full five-algorithm ensemble, but isolation-forest `score_samples` are negative while the buy thresholds require positive scores above 0.8, so the weighted ensemble still resolves to hold. A component cannot be measured in a system that never trades. So the honest verdict is not that sentiment fails. It is that the test could not isolate sentiment's contribution under these inputs, and a real verdict requires real market data and real news, which is scoped as the next step. The ablation harness that would produce that verdict is built and lives in `run_sentiment_ablation.py`.
 
 The transaction-cost analysis is the one component with a clean result. Across the venues studied, round-trip cost varies by more than an order of magnitude, and for a thin-edge strategy that gap is decisive. The cheapest venues clear a far lower break-even edge per trade than the standard-fee venues, which means venue selection is a larger lever on viability than any model choice. The full dated table, methodology, and sources are in [`TRANSACTION_COST_ANALYSIS.md`](TRANSACTION_COST_ANALYSIS.md).
 
@@ -73,6 +87,8 @@ The validation results above are on synthetic data with a fixed seed, not real m
 The sentiment path currently uses simulated headlines rather than live feeds, which is why the ablation could not reach a verdict.
 
 The walk-forward backtest assumes frictionless fills, no slippage and no latency. This inflates any performance figure the system produces and is the next validation gap to close after the data question.
+
+The volume anomaly detector is fitted once on the first 120 bars of the synthetic series and is not refit per purged fold during the ensemble ablation. That is a stated methodology limitation, not a silent assumption.
 
 The ML-layer sentiment features were not fully isolated in the ablation, so even a real-data ablation on the primary path would be partial until the toggle is extended through every layer where sentiment appears.
 
@@ -98,16 +114,16 @@ One component of a broader research program on building, governing, and defendin
 src/backtesting/purged_cv.py        Purged cross-validation with embargo (PurgedKFold)
 src/backtesting/signal_backtest.py  Walk-forward signal evaluator
 src/trading/signal_generator.py     Primary multi-signal ensemble
-src/trading/risk_manager.py         Kelly-based position sizing
-src/machine_learning/               XGBoost and GRU overlay
-src/api/secure_manager.py           Environment-based credential handling
+src/trading/risk_manager.py         Kelly-based position sizing (exploratory)
+src/machine_learning/xgboost_predictor.py  Validated XGBoost + purged CV path
+src/api/secure_manager.py           Credential vault exhibit (exploratory)
 run_sentiment_ablation.py           Validation comparison and sentiment ablation
 TRANSACTION_COST_ANALYSIS.md        Venue cost study and break-even analysis
 ```
 
 ## Running it
 
-The system reads all credentials from environment variables. The validation and ablation run uses a synthetic series with a fixed seed and requires no credentials, so it reproduces the numbers in the methodology and findings sections directly after install.
+The validation and ablation run uses a synthetic series with a fixed seed and requires no credentials. Thread pinning and seeding are set inside `run_sentiment_ablation.py`; no extra environment variables are required on Windows.
 
 ```bash
 python3 -m venv .venv
@@ -116,7 +132,17 @@ pip install -r requirements-ablation.txt
 PYTHONPATH=src python3 run_sentiment_ablation.py
 ```
 
-To run the data-dependent paths, copy `.env.example` to `.env` and supply your own keys. The repository ships with no credentials.
+On Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-ablation.txt
+$env:PYTHONPATH="src"
+python run_sentiment_ablation.py
+```
+
+To run exploratory paths that need credentials (paper trading, encrypted stores), copy `.env.example` to `.env` and supply your own keys. The repository ships with no credentials.
 
 ## References
 
