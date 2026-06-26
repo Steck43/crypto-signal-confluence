@@ -757,7 +757,7 @@ class InstitutionalVolumeAnomalyDetector:
             self.feature_columns = [col for col in df.columns 
                                   if col not in ['timestamp', 'symbol', 'volume', 'price', 'high', 'low']]
             
-            self.logger.info(f"SUCCESS: Engineered {len(self.feature_columns)} institutional features")
+            self.logger.debug(f"Engineered {len(self.feature_columns)} institutional features")
             
             return df
             

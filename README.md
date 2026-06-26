@@ -70,9 +70,11 @@ These numbers are produced by the committed code and reproduce from the run comm
 
 Results are reported as they came out, including the inconclusive one.
 
-The validation method behaves as designed. Purging and embargoing moved the XGBoost metrics slightly on this synthetic set, confirming the implementation runs and that the standard split was not heavily leaking.
+The validation method behaves as designed. On this synthetic set, purged cross-validation produced XGBoost metrics close to standard time-series splitting: accuracy and recall 80.32 percent versus 80.51 percent, precision 66.57 percent versus 69.90 percent, F1 72.29 percent versus 72.75 percent. The gaps are small and are not read as evidence that purging materially changed the estimate on this data.
 
-The sentiment ablation was inconclusive on the current measured path, and the reason is itself the finding. With sentiment included and with sentiment removed, the system produced identical results, because on the synthetic series with simulated headlines the ensemble emitted hold on all 4,165 purged test bars. After correcting the volume scoring path (rolling window evaluation and Mahalanobis on the institutional detector), the volume leg runs the full five-algorithm ensemble, but isolation-forest `score_samples` are negative while the buy thresholds require positive scores above 0.8, so the weighted ensemble still resolves to hold. A component cannot be measured in a system that never trades. So the honest verdict is not that sentiment fails. It is that the test could not isolate sentiment's contribution under these inputs, and a real verdict requires real market data and real news, which is scoped as the next step. The ablation harness that would produce that verdict is built and lives in `run_sentiment_ablation.py`.
+A prior defect in the volume scoring path was corrected. The institutional detector had been evaluated on single-bar windows that could not produce features; it now scores every bar from a rolling history window with the full five-algorithm ensemble, including Mahalanobis distance relative to the fit distribution. Anomaly scores and confidence values are nonzero on the ablation path.
+
+The sentiment ablation is inconclusive on synthetic data because the ensemble holds on all 4,165 purged test bars in both arms. With sentiment included and with sentiment removed, the action distribution is identical: zero buy, zero sell, 4,165 hold. That is not a bug and not a claim that sentiment lacks edge. The weighted confluence signal does not cross the ensemble action threshold on this synthetic series, so the ablation toggle cannot separate sentiment's contribution. A run on real historical prices and timestamped news is the necessary next step to make the test conclusive. The harness for that run is in `run_sentiment_ablation.py`.
 
 The transaction-cost analysis is the one component with a clean result. Across the venues studied, round-trip cost varies by more than an order of magnitude, and for a thin-edge strategy that gap is decisive. The cheapest venues clear a far lower break-even edge per trade than the standard-fee venues, which means venue selection is a larger lever on viability than any model choice. The full dated table, methodology, and sources are in [`TRANSACTION_COST_ANALYSIS.md`](TRANSACTION_COST_ANALYSIS.md).
 
@@ -84,13 +86,15 @@ The system is complete through paper and synthetic backtesting. Live execution i
 
 The validation results above are on synthetic data with a fixed seed, not real market data. They demonstrate that the method is implemented correctly, not that the system has edge.
 
-The sentiment path currently uses simulated headlines rather than live feeds, which is why the ablation could not reach a verdict.
+The sentiment path currently uses simulated headlines rather than live feeds. Combined with the all-hold ensemble outcome on synthetic data, the ablation cannot reach a verdict until real news is wired in.
 
 The walk-forward backtest assumes frictionless fills, no slippage and no latency. This inflates any performance figure the system produces and is the next validation gap to close after the data question.
 
-The volume anomaly detector is fitted once on the first 120 bars of the synthetic series and is not refit per purged fold during the ensemble ablation. That is a stated methodology limitation, not a silent assumption.
+During the ensemble ablation, the volume anomaly detector is fitted once on the first 120 bars and is not refit per purged fold. That is a stated methodology limitation, also noted in `run_sentiment_ablation.py`.
 
 The ML-layer sentiment features were not fully isolated in the ablation, so even a real-data ablation on the primary path would be partial until the toggle is extended through every layer where sentiment appears.
+
+Exploratory modules outside the validated closure may require optional dependencies beyond `requirements-ablation.txt` (for example torch, aiohttp, requests, cryptography, ta, tweepy). A missing-import error on those paths is expected unless those extras are installed.
 
 Edge on real market data is unproven. That is the central honest status of this repository. The architecture is complete and the validation is rigorous. Whether the architecture produces edge is the open question this framework exists to answer.
 
@@ -123,7 +127,7 @@ TRANSACTION_COST_ANALYSIS.md        Venue cost study and break-even analysis
 
 ## Running it
 
-The validation and ablation run uses a synthetic series with a fixed seed and requires no credentials. Thread pinning and seeding are set inside `run_sentiment_ablation.py`; no extra environment variables are required on Windows.
+The validation and ablation run uses a synthetic series with a fixed seed and requires no credentials. Thread pinning and seeding are set inside `run_sentiment_ablation.py`; no extra environment variables are required on Windows. Expect about fifteen minutes end to end: XGBoost cross-validation prints first, then the ensemble walk-forward (progress every 500 bars).
 
 ```bash
 python3 -m venv .venv
