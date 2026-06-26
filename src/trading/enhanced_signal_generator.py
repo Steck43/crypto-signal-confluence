@@ -1,6 +1,8 @@
 """
 Enhanced Signal Generator with XGBoost + GRU Integration
 
+EXPLORATORY: ML overlay on the primary ensemble. Not on the validated ablation path.
+
 Extends the existing SimplifiedInstitutionalSignalGenerator to include:
 - XGBoost feature-based predictions
 - GRU time series forecasting  

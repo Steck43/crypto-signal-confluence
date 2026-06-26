@@ -1,6 +1,8 @@
 """
 Model-Agnostic Meta-Learning (MAML) for Trading
 
+EXPLORATORY: meta-learning research scaffold. Not on the validated ablation path. Not validated.
+
 Implementation of MAML for rapid adaptation to new market conditions:
 - Fast adaptation to regime changes
 - Cross-asset learning transfer

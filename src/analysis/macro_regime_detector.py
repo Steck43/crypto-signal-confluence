@@ -1,6 +1,9 @@
 """
 Macro Regime Detector for Economic Data Analysis
-Uses FRED API to analyze economic fundamentals and determine market regime
+
+EXPLORATORY: macro regime research scaffold. Not on the validated ablation path. Not validated.
+
+Uses FRED-shaped economic inputs to estimate risk-on/off regime.
 """
 
 import numpy as np

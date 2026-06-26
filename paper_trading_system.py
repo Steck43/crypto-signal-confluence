@@ -2,6 +2,9 @@
 """
 Institutional Paper Trading System
 
+EXPLORATORY: paper-trading loop on synthetic data. Not validated. Not on the proven ablation path.
+Demonstrates the manual-to-automated ceiling described in the README.
+
 Continuous 24/7 paper trading with:
 - Real-time signal generation
 - Model training and adaptation

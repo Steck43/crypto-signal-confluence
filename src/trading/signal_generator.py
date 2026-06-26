@@ -81,12 +81,12 @@ class SimplifiedInstitutionalSignalGenerator:
             # Fit the model
             self.volume_detector.fit(anomaly_data)
             self.is_fitted = True
-            print(f"✅ Volume anomaly detector fitted successfully")
+            print(f"Volume anomaly detector fitted successfully")
         except Exception as e:
-            print(f"⚠️  Volume detector fitting failed: {e}, using simple detection")
+            print(f"Volume detector fitting failed: {e}, using simple detection")
             self.is_fitted = True  # Continue with simple detection
         
-        print(f"✅ Features available: {len(historical_data.columns)}")
+        print(f"Features available: {len(historical_data.columns)}")
         
         return {
             'models_fitted': 1,

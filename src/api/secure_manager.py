@@ -1,6 +1,10 @@
 """
 Secure API Credential Manager
-Manages encrypted storage and retrieval of API credentials
+
+EXPLORATORY security exhibit (Tier 2): PBKDF2-HMAC-SHA256 at 100,000 iterations with a
+per-deployment salt file before Fernet encryption. Not on the validated ablation path.
+
+Manages encrypted storage and retrieval of API credentials.
 """
 
 import asyncio
