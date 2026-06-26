@@ -10,7 +10,15 @@ Trading it by hand also showed me the ceiling. A manual operator adds two costs 
 
 The path from there was straightforward. A signal generator, traded by hand. Then a machine-learning layer to sharpen the signals. Then automation, to take the human out of the execution loop and let it run every session without error, hesitation, or sleep. The next step after that was completing and validating the automation, but I had to put the build on hold before I got there.
 
-I returned to it in 2026. Rather than pick up exactly where I stopped, the first thing I did was ask whether the architecture still held up after a year, given how fast this field moves. So I surveyed the current frontier, foundation models built specifically for financial time series, and concluded the existing approach was still sound and current, with the newer models worth evaluating rather than adopting wholesale. With the architecture validated as still appropriate, the work turned to the harder question, whether it actually has edge. That question is what this repository tests.
+I returned to it in 2026. Rather than pick up exactly where I stopped, the first thing I did was ask whether the architecture still held up after a year, given how fast this field moves. So I surveyed the current frontier, foundation models built specifically for financial time series, and concluded the model choices were still current, with the newer models worth evaluating rather than adopting wholesale. Current is not the same as proven. Whether the architecture produces edge was, and remains, the open question. With the architecture validated as still appropriate, the work turned to the harder question, whether it actually has edge. That question is what this repository tests.
+
+## Why this exists, and the year between
+
+This system was not designed top down from a specification. It accreted from experience. Each component traces to something that happened in real trading, a move on volume I did not see, a headline that broke a regime I was trading, a loss that taught what losing teaches. The breadth is the record of those lessons, not a feature list assembled for its own sake.
+
+I shelved the build for roughly a year, on purpose. My first daughter was born and the R&D was not where my time belonged. Rather than let it stall, I refocused on the expertise the next phase would require. In that year I finished my undergraduate degree, earned Security+, the ISC2 CC, and the CISSP, and was accepted into and enrolled in Santa Clara University's M.S. in Artificial Intelligence, where I am now.
+
+So the return to this work is not a resumption. It is an audit, by a more capable version of the engineer who built it. The question this time is not only whether the system runs, but whether the prior judgment holds up, what is still sound, what is dated, and what does not earn its place under honest validation. The tier split below is the result of that audit. The experience produced the breadth. The rigor is now testing which of it survives, and some of it does not.
 
 ## The question
 
@@ -90,23 +98,27 @@ The sentiment path currently uses simulated headlines rather than live feeds. Co
 
 The walk-forward backtest assumes frictionless fills, no slippage and no latency. This inflates any performance figure the system produces and is the next validation gap to close after the data question.
 
+The ensemble's action threshold is not yet reconciled with the volume detector's score scale. The detector emits raw anomaly magnitudes, while the confluence threshold expects a normalized signal strength. Until the score path is normalized or the threshold recalibrated, the ensemble can hold for a mechanical reason rather than an economic one. This is why real data alone will not make the sentiment ablation conclusive. The score semantics must be reconciled first. This is the precondition for the real-data run, not a step after it.
+
 During the ensemble ablation, the volume anomaly detector is fitted once on the first 120 bars and is not refit per purged fold. That is a stated methodology limitation, also noted in `run_sentiment_ablation.py`.
 
 The ML-layer sentiment features were not fully isolated in the ablation, so even a real-data ablation on the primary path would be partial until the toggle is extended through every layer where sentiment appears.
 
 Exploratory modules outside the validated closure may require optional dependencies beyond `requirements-ablation.txt` (for example torch, aiohttp, requests, cryptography, ta, tweepy). A missing-import error on those paths is expected unless those extras are installed.
 
-Edge on real market data is unproven. That is the central honest status of this repository. The architecture is complete and the validation is rigorous. Whether the architecture produces edge is the open question this framework exists to answer.
+Edge on real market data is unproven, and so is the premise beneath it. The system has never traded on this data, so the central hypothesis, that fusing the legs at the confluence threshold produces a signal stronger than any leg alone, has not been tested for or against. That is the honest status of this repository. The architecture is complete and the validation method is rigorous. Whether the fusion does what it is built to do is the open question this framework exists to answer, and the sequence that would settle it, normalize the scores, wire real data, ablate each leg against real forward returns, test fusion against its own subsets, then apply the cost floor, is laid out in the roadmap.
 
 ## Roadmap
 
 The next steps follow directly from the limitations and the constraints, in priority order.
 
-Run the sentiment ablation on real historical price data and real timestamped news, and extend the component toggle through the ML ensemble and the aggregator so sentiment is fully isolated. This is the test that turns the central open question into an answer.
+Reconcile the volume detector's score scale with the ensemble's action threshold so the system can act for economic rather than mechanical reasons, then run the sentiment ablation on real historical price data and real timestamped news, extending the component toggle through the ML ensemble and the aggregator so sentiment is fully isolated. This is the test that turns the central open question into an answer.
 
 Replace the frictionless-fill assumption in the backtest with modeled slippage and fees, using the venue cost analysis already in hand.
 
 Move the sentiment layer from lagging aggregated news toward earlier, source-level ingestion, which is the direct fix to the data constraint the system was built under. The value of sentiment as a signal depends on being early rather than on being published. This step is gated on the ablation first proving the component earns its weight.
+
+Replace the fixed-weight aggregator with a bounded orchestration layer that reads each expert's calibrated confidence and uncertainty, decides under that uncertainty including the choice to abstain, and logs every input, decision, and rationale for audit. The fixed-weight ensemble cannot express uncertainty or explain itself. A confidence-aware, auditable orchestrator can, and the same property that makes a trading decision accountable is what makes any agent decision accountable. This is the direction in which this work connects to the broader program on building, governing, and defending coordinated multi-agent systems. It is gated on the experts first emitting calibrated, comparable confidence, which the score-reconciliation step above begins.
 
 ## Context
 
@@ -158,6 +170,16 @@ Methods and components actually implemented in this repository.
 - Kelly, J. L. (1956). A New Interpretation of Information Rate. *Bell System Technical Journal*, 35(4). Basis for the Kelly position sizing in `risk_manager.py`.
 - Chen, T., Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. *KDD '16*. Gradient-boosted classifier in the ML overlay.
 - Cho, K. et al. (2014). Learning Phrase Representations using RNN Encoder-Decoder. arXiv:1406.1078. GRU, used in the price forecaster.
+
+### Domain grounding
+
+Literature that motivates the design choices, distinct from the methods implemented above. These ground why each leg exists; they do not validate this repository's specific implementation, and the gap between each source's data and this system's data is stated where it matters.
+
+Silantyev, E. (2019). Order flow analysis of cryptocurrency markets. Digital Finance, 1(1), 191-218. DOI 10.1007/s42521-019-00007-w. Motivates the volume leg: trade flow imbalance explains contemporaneous crypto price changes, and crypto order books differ from established markets in depth and update rate. The study uses BitMEX Level II order-flow data; this repository uses OHLCV candle volume, a coarser proxy, which is the gap the roadmap's source-level data step addresses.
+
+Jaquart, P., Köpke, S., Weinhardt, C. (2022). Machine learning for cryptocurrency market prediction and trading. The Journal of Finance and Data Science, 8, 331-352. DOI 10.1016/j.jfds.2022.12.001. Grounds the modest-accuracy, cost-aware posture: ML models reach statistically viable but small directional accuracy on a survivorship-controlled coin universe, with transaction costs a binding constraint on practical profitability.
+
+Du, K., Xing, F., Mao, R., Cambria, E. (2024). Financial sentiment analysis: Techniques and applications. ACM Computing Surveys, 56(9), Article 220. DOI 10.1145/3649451. Canonical survey grounding the sentiment leg's rationale, both the technique and market-application streams, against which this repository's RSS-based path is a deliberately constrained, free-data implementation.
 
 ### Current research informing the roadmap
 
