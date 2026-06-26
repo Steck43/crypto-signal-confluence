@@ -1,5 +1,7 @@
 """
-Hyperliquid exchange API client with professional-grade implementation
+Hyperliquid exchange API client.
+
+EXPLORATORY: REST client scaffold. Not validated. Fails closed on order errors.
 """
 
 import asyncio
@@ -240,16 +242,7 @@ class HyperliquidClient:
             
         except Exception as e:
             logger.error(f"Error placing order for {symbol}: {e}")
-            return {
-                'order_id': f"HL_{int(time.time() * 1000)}",
-                'status': 'submitted',
-                'symbol': symbol,
-                'side': side,
-                'amount': amount,
-                'price': price,
-                'type': order_type,
-                'time': int(time.time() * 1000)
-            }
+            raise RuntimeError(f"Hyperliquid order placement failed for {symbol}: {e}") from e
             
     async def get_account_info(self) -> Dict:
         """Get account information"""

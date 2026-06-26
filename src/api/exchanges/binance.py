@@ -1,5 +1,7 @@
 """
-Binance exchange API client with professional-grade implementation
+Binance exchange API client.
+
+EXPLORATORY: REST client scaffold. Not validated. Fails closed on order and market errors.
 """
 
 import asyncio
@@ -181,19 +183,7 @@ class BinanceClient:
             
         except Exception as e:
             logger.error(f"Error getting SOL data: {e}")
-            # Return fallback data
-            return {
-                'price': 100.0,
-                'bid': 99.9,
-                'ask': 100.1,
-                'volume': 1000000,
-                'high_24h': 105.0,
-                'low_24h': 95.0,
-                'price_change_24h': 0.0,
-                'price_change_percent_24h': 0.0,
-                'quote_volume': 100000000,
-                'count': 1000
-            }
+            raise RuntimeError(f"Binance SOL market data request failed: {e}") from e
             
     async def get_market_data(self, symbol: str) -> Dict:
         """Get market data for any symbol"""
@@ -301,17 +291,7 @@ class BinanceClient:
             
         except Exception as e:
             logger.error(f"Error placing SOL order: {e}")
-            # Return fallback response
-            return {
-                'id': f"BN_{int(time.time() * 1000)}",
-                'status': 'submitted',
-                'side': side,
-                'amount': amount,
-                'price': None,
-                'symbol': 'SOLUSDT',
-                'type': order_type,
-                'time': int(time.time() * 1000)
-            }
+            raise RuntimeError(f"Binance SOL order placement failed: {e}") from e
             
     async def place_order(self, symbol: str, side: str, quantity: float, order_type: str = 'MARKET', price: Optional[float] = None) -> Dict:
         """Place order for any symbol"""
@@ -345,16 +325,7 @@ class BinanceClient:
             
         except Exception as e:
             logger.error(f"Error placing order for {symbol}: {e}")
-            return {
-                'id': f"BN_{int(time.time() * 1000)}",
-                'status': 'submitted',
-                'side': side,
-                'amount': quantity,
-                'price': price,
-                'symbol': symbol,
-                'type': order_type,
-                'time': int(time.time() * 1000)
-            }
+            raise RuntimeError(f"Binance order placement failed for {symbol}: {e}") from e
             
     async def get_account_info(self) -> Dict:
         """Get account information"""

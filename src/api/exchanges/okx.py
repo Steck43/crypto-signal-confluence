@@ -1,5 +1,7 @@
 """
-OKX exchange API client with professional-grade implementation
+OKX exchange API client.
+
+EXPLORATORY: REST client scaffold. Not validated. Fails closed on order errors.
 """
 
 import asyncio
@@ -289,16 +291,7 @@ class OKXClient:
             
         except Exception as e:
             logger.error(f"Error placing order for {symbol}: {e}")
-            return {
-                'id': f"OKX_{int(time.time() * 1000)}",
-                'status': 'submitted',
-                'side': side,
-                'amount': quantity,
-                'price': price,
-                'symbol': symbol,
-                'type': order_type,
-                'time': int(time.time() * 1000)
-            }
+            raise RuntimeError(f"OKX order placement failed for {symbol}: {e}") from e
             
     async def get_account_info(self) -> Dict:
         """Get account information"""

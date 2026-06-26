@@ -1,5 +1,11 @@
 import asyncio
 from datetime import datetime
+
+"""
+EXPLORATORY: multi-exchange order routing scaffold. Not validated. Not wired to live trading.
+Fails closed on API errors (no synthetic success responses).
+"""
+
 from api.exchanges.hyperliquid import HyperliquidClient
 from api.exchanges.binance import BinanceClient
 from api.exchanges.okx import OKXClient
@@ -179,17 +185,10 @@ class OrderExecutor:
             current_price = market_data['price']
             amount = size / current_price
             
-            # Note: Implement actual OKX order placement
-            return {
-                'order_id': f"OKX_{datetime.now().timestamp()}",
-                'exchange': 'okx',
-                'symbol': symbol,
-                'side': side,
-                'amount': amount,
-                'price': current_price,
-                'status': 'submitted',
-                'timestamp': datetime.now()
-            }
+            # OKX order placement is not implemented on this exploratory path.
+            raise NotImplementedError(
+                "exploratory OKX execution scaffold; order placement not implemented"
+            )
             
         except Exception as e:
             print(f"OKX execution error: {e}")
