@@ -11,6 +11,9 @@ secure_credentials.salt
 node_modules/
 dashboard/node_modules/
 
+# Exploratory dashboard build artifacts (not on the validated path)
+dashboard/package-lock.json
+
 # Python
 __pycache__/
 *.py[cod]
