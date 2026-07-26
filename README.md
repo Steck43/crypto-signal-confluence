@@ -118,11 +118,11 @@ Replace the frictionless-fill assumption in the backtest with modeled slippage a
 
 Move the sentiment layer from lagging aggregated news toward earlier, source-level ingestion, which is the direct fix to the data constraint the system was built under. The value of sentiment as a signal depends on being early rather than on being published. This step is gated on the ablation first proving the component earns its weight.
 
-Replace the fixed-weight aggregator with a bounded orchestration layer that reads each expert's calibrated confidence and uncertainty, decides under that uncertainty including the choice to abstain, and logs every input, decision, and rationale for audit. The fixed-weight ensemble cannot express uncertainty or explain itself. A confidence-aware, auditable orchestrator can, and the same property that makes a trading decision accountable is what makes any agent decision accountable. This is the direction in which this work connects to the broader program on building, governing, and defending coordinated multi-agent systems. It is gated on the experts first emitting calibrated, comparable confidence, which the score-reconciliation step above begins.
+Replace the fixed-weight aggregator with a bounded orchestration layer that reads each expert's calibrated confidence and uncertainty, decides under that uncertainty including the choice to abstain, and logs every input, decision, and rationale for audit. The fixed-weight ensemble cannot express uncertainty or explain itself. A confidence-aware, auditable orchestrator can, and the same property that makes a trading decision accountable is what makes any agent decision accountable. This is the direction in which this work connects to the broader program on agent containment. It is gated on the experts first emitting calibrated, comparable confidence, which the score-reconciliation step above begins.
 
 ## Context
 
-One component of a broader research program on building, governing, and defending coordinated multi-agent systems.
+One component of a broader research program on the containment layer for autonomous agents: the deterministic boundary that decides what a system may do before it acts.
 
 ## Repository layout
 
