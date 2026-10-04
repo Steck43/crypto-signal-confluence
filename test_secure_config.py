@@ -8,12 +8,43 @@ to ensure credentials are properly stored and retrieved.
 
 import sys
 import os
+import types
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from exchanges.exchange_config import get_exchange_config
+
+# Exploratory client extras are optional; stub aiohttp so _resolve_salt is importable.
+if "aiohttp" not in sys.modules:
+    aiohttp_stub = types.ModuleType("aiohttp")
+    aiohttp_stub.ClientSession = type("ClientSession", (), {})
+    sys.modules["aiohttp"] = aiohttp_stub
+
+from api.secure_manager import SecureAPIManager
+
+
+def test_resolve_salt_is_per_deployment(tmp_path):
+    """README claim: encryption derives its key with a per-deployment salt.
+
+    This test calls _resolve_salt. A helper that always returns one fixed
+    salt must fail. Temporary files only; no vault path is opened.
+    """
+    first = object.__new__(SecureAPIManager)
+    first.salt_file = tmp_path / "deploy-a.salt"
+    second = object.__new__(SecureAPIManager)
+    second.salt_file = tmp_path / "deploy-b.salt"
+
+    salt_a = first._resolve_salt()
+    salt_b = second._resolve_salt()
+
+    assert isinstance(salt_a, bytes) and len(salt_a) == 16
+    assert isinstance(salt_b, bytes) and len(salt_b) == 16
+    assert salt_a != salt_b, "per-deployment salt must not be a fixed source constant"
+
+    assert first.salt_file.read_bytes() == salt_a
+    assert first._resolve_salt() == salt_a
 
 def test_secure_config():
     """Test the secure configuration system."""
