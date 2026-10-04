@@ -16,11 +16,20 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from exchanges.exchange_config import get_exchange_config
 
-# Exploratory client extras are optional; stub aiohttp so _resolve_salt is importable.
-if "aiohttp" not in sys.modules:
-    aiohttp_stub = types.ModuleType("aiohttp")
-    aiohttp_stub.ClientSession = type("ClientSession", (), {})
-    sys.modules["aiohttp"] = aiohttp_stub
+# Client extras are unused by _resolve_salt. Stub them so the helper can be
+# imported without aiohttp and without opening any vault path.
+for _name, _attrs in (
+    ("api.coingecko", {"get_coingecko_client": None, "CoinGeckoClient": object}),
+    ("api.fred", {"get_fred_client": None, "FREDClient": object}),
+    ("api.exchanges", {}),
+    ("api.exchanges.binance", {"BinanceClient": object}),
+    ("api.exchanges.okx", {"OKXClient": object}),
+    ("api.exchanges.hyperliquid", {"HyperliquidClient": object}),
+):
+    _module = types.ModuleType(_name)
+    for _key, _value in _attrs.items():
+        setattr(_module, _key, _value)
+    sys.modules[_name] = _module
 
 from api.secure_manager import SecureAPIManager
 
