@@ -11,6 +11,14 @@ import sys
 import os
 from pathlib import Path
 
+import pytest
+
+if os.environ.get("CI") == "true":
+    pytest.skip(
+        "needs exchange clients and API credentials, which CI does not receive",
+        allow_module_level=True,
+    )
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
