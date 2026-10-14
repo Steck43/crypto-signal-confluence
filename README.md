@@ -1,5 +1,7 @@
 # crypto-signal-confluence
 
+[![floor](https://github.com/Steck43/crypto-signal-confluence/actions/workflows/floor.yml/badge.svg)](https://github.com/Steck43/crypto-signal-confluence/actions/workflows/floor.yml)
+
 A research framework for studying whether multi-signal fusion produces predictive edge in cryptocurrency markets under realistic cost and validation constraints.
 
 ## Background

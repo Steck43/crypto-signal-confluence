@@ -9,6 +9,8 @@ to ensure credentials are properly stored and retrieved.
 import sys
 import os
 import types
+
+import pytest
 from pathlib import Path
 
 # Add src to path
@@ -55,6 +57,10 @@ def test_resolve_salt_is_per_deployment(tmp_path):
     assert first.salt_file.read_bytes() == salt_a
     assert first._resolve_salt() == salt_a
 
+@pytest.mark.skipif(
+    os.environ.get("CI") == "true",
+    reason="needs exchange API credentials, which CI does not receive",
+)
 def test_secure_config():
     """Test the secure configuration system."""
     print("🧪 Testing secure configuration system...")
@@ -153,6 +159,10 @@ def test_secure_config():
         traceback.print_exc()
         return False
 
+@pytest.mark.skipif(
+    os.environ.get("CI") == "true",
+    reason="needs exchange API credentials, which CI does not receive",
+)
 def test_environment_fallback():
     """Test environment variable fallback."""
     print("\n🌍 Testing environment variable fallback...")
